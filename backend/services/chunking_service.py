@@ -1,255 +1,243 @@
-from typing import List, Tuple, Dict, Any
-import re
-from utils.logger import chat_logger
-from services.document_metadata_extractor import document_metadata_extractor
+"""
+Chunking Service for Lumina IQ RAG Backend.
+
+Handles text chunking using LlamaIndex with configurable strategies.
+"""
+
+from typing import List, Dict, Any, Optional
+from llama_index.core import Document
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.schema import TextNode
+from config.settings import settings
+from utils.logger import get_logger
+
+logger = get_logger("chunking_service")
+
 
 class ChunkingService:
-    """Service for splitting text into chunks for RAG with rich metadata extraction"""
-    
-    @staticmethod
-    def chunk_text(
-        text: str, 
-        chunk_size: int = 1000, 
-        chunk_overlap: int = 200
-    ) -> List[str]:
-        """
-        Split text into overlapping chunks
-        
-        Args:
-            text: The text to chunk
-            chunk_size: Target size of each chunk in characters
-            chunk_overlap: Number of characters to overlap between chunks
-            
-        Returns:
-            List of text chunks
-        """
-        if not text or len(text.strip()) == 0:
-            chat_logger.warning("Empty text provided for chunking")
-            return []
-        
-        # Clean the text
-        text = text.strip()
-        
-        # If text is smaller than chunk_size, return as single chunk
-        if len(text) <= chunk_size:
-            return [text]
-        
-        # Prevent infinite loop if overlap is too large
-        if chunk_overlap >= chunk_size:
-            chat_logger.warning(f"Chunk overlap ({chunk_overlap}) >= chunk size ({chunk_size}), reducing overlap to {chunk_size - 1}")
-            chunk_overlap = chunk_size - 1
-        
-        chunks = []
-        start = 0
-        iteration_count = 0
+    """Service for text chunking using LlamaIndex."""
 
-        while start < len(text):
-            # Calculate end position
-            end = start + chunk_size
-            iteration_count += 1
-            if iteration_count % 100 == 0:
-                chat_logger.info(f"Chunking iteration {iteration_count}, start={start}, end={end}, text_len={len(text)}")
-            
-            # If we're not at the end of the text, try to break at a sentence or paragraph
-            if end < len(text):
-                # Look for paragraph break
-                paragraph_break = text.rfind('\n\n', start, end)
-                if paragraph_break != -1 and paragraph_break > start:
-                    end = paragraph_break + 2
-                    chat_logger.debug(f"Adjusted end to paragraph break at {paragraph_break}")
-                else:
-                    # Look for sentence break
-                    sentence_breaks = ['.', '!', '?', '\n']
-                    best_break = -1
-                    for break_char in sentence_breaks:
-                        pos = text.rfind(break_char, start, end)
-                        if pos > best_break and pos > start:
-                            best_break = pos
-                    
-                    if best_break != -1:
-                        end = best_break + 1
-                        chat_logger.debug(f"Adjusted end to sentence break at {best_break}")
-            
-            # Extract chunk
-            chunk = text[start:end].strip()
-            if chunk:
-                chunks.append(chunk)
-            
-            # Track previous end to ensure progress
-            prev_end = end
-            
-            # Move start position with overlap
-            start = end - chunk_overlap
-            
-            # Ensure we make progress (don't go backward or stay in same position)
-            if start < 0:
-                start = 0
-            if start <= prev_end:
-                start = prev_end + 1
-                chat_logger.debug(f"Adjusted start from {start - (prev_end + 1)} to {start} to ensure progress")
-        
-        chat_logger.info(f"Chunking completed after {iteration_count} iterations")
-        if iteration_count > 1000:
-            chat_logger.warning(f"High iteration count: {iteration_count}, possible infinite loop or performance issue")
-        chat_logger.info(f"Split text into {len(chunks)} chunks",
-                        total_length=len(text),
-                        avg_chunk_size=len(text)//len(chunks) if chunks else 0)
+    def __init__(self):
+        self.sentence_splitter: Optional[SentenceSplitter] = None
+        self.is_initialized = False
 
-        return chunks
-    
-    @staticmethod
-    def chunk_by_paragraphs(
-        text: str, 
-        max_chunk_size: int = 1500
-    ) -> List[str]:
-        """
-        Split text by paragraphs, combining small paragraphs to reach target size
-        
-        Args:
-            text: The text to chunk
-            max_chunk_size: Maximum size of each chunk
-            
-        Returns:
-            List of text chunks
-        """
-        if not text or len(text.strip()) == 0:
-            return []
-        
-        # Split by double newlines (paragraphs)
-        paragraphs = re.split(r'\n\s*\n', text.strip())
-        
-        chunks = []
-        current_chunk = ""
-        
-        for para in paragraphs:
-            para = para.strip()
-            if not para:
-                continue
-            
-            # If adding this paragraph exceeds max size and we have content, save current chunk
-            if len(current_chunk) + len(para) + 2 > max_chunk_size and current_chunk:
-                chunks.append(current_chunk.strip())
-                current_chunk = para
-            else:
-                # Add to current chunk
-                if current_chunk:
-                    current_chunk += "\n\n" + para
-                else:
-                    current_chunk = para
-        
-        # Add the last chunk
-        if current_chunk:
-            chunks.append(current_chunk.strip())
-        
-        chat_logger.info(f"Split text into {len(chunks)} paragraph-based chunks")
-        
-        return chunks
-    
-    @staticmethod
-    def chunk_with_context(
-        text: str,
-        chunk_size: int = 1000,
-        overlap: int = 200,
-        add_metadata: bool = True
-    ) -> List[Tuple[str, dict]]:
-        """
-        Chunk text with additional context metadata
-        
-        Args:
-            text: The text to chunk
-            chunk_size: Target chunk size
-            overlap: Overlap between chunks
-            add_metadata: Whether to add position metadata
-            
-        Returns:
-            List of tuples (chunk_text, metadata_dict)
-        """
-        chunks = ChunkingService.chunk_text(text, chunk_size, overlap)
-        
-        if not add_metadata:
-            return [(chunk, {}) for chunk in chunks]
-        
-        result = []
-        for i, chunk in enumerate(chunks):
-            metadata = {
-                "chunk_index": i,
-                "total_chunks": len(chunks),
-                "position": f"{i+1}/{len(chunks)}",
-                "is_first": i == 0,
-                "is_last": i == len(chunks) - 1
-            }
-            result.append((chunk, metadata))
-        
-        return result
-    
-    @staticmethod
-    def chunk_with_rich_metadata(
-        text: str,
-        document_name: str,
-        chunk_size: int = 1000,
-        overlap: int = 200
-    ) -> List[Dict[str, Any]]:
-        """
-        Chunk text with rich structural metadata extraction.
-        This is the ADVANCED method that extracts chapter, section, page, and content type info.
-        
-        Args:
-            text: The full document text
-            document_name: Name of the document
-            chunk_size: Target chunk size
-            overlap: Overlap between chunks
-            
-        Returns:
-            List of dictionaries with 'text' and 'metadata' keys
-        """
-        chat_logger.info("Chunking with rich metadata extraction", 
-                        document_name=document_name,
-                        chunk_size=chunk_size)
-        
-        # Create chunks
-        chunks = ChunkingService.chunk_text(text, chunk_size, overlap)
-        
-        if not chunks:
-            return []
-        
-        # Extract metadata for each chunk
-        chunks_with_metadata = []
-        context_before = ""
-        
-        for i, chunk_text in enumerate(chunks):
-            # Extract rich metadata
-            metadata = document_metadata_extractor.extract_metadata_from_chunk(
-                chunk_text=chunk_text,
-                chunk_index=i,
-                total_chunks=len(chunks),
-                document_name=document_name,
-                context_before=context_before if i > 0 else None
+    def initialize(self) -> None:
+        """Initialize chunking service with LlamaIndex SentenceSplitter."""
+        try:
+            logger.info(
+                "Initializing chunking service",
+                extra={
+                    "extra_fields": {
+                        "chunk_size": settings.LLAMAINDEX_CHUNK_SIZE,
+                        "chunk_overlap": settings.LLAMAINDEX_CHUNK_OVERLAP,
+                    }
+                },
             )
-            
-            chunks_with_metadata.append({
-                "text": chunk_text,
-                "metadata": metadata
-            })
-            
-            # Update context for next iteration
-            context_before = chunk_text
-        
-        # Propagate chapter/section metadata forward
-        metadata_list = [c["metadata"] for c in chunks_with_metadata]
-        updated_metadata = document_metadata_extractor.propagate_chapter_metadata(metadata_list)
-        
-        # Update with propagated metadata
-        for i, chunk_data in enumerate(chunks_with_metadata):
-            chunk_data["metadata"] = updated_metadata[i]
-        
-        chat_logger.info(f"Created {len(chunks_with_metadata)} chunks with rich metadata")
-        
-        # Log metadata statistics
-        chapters_found = set(m.get("chapter_number") for m in updated_metadata if m.get("chapter_number"))
-        sections_found = set(m.get("section_number") for m in updated_metadata if m.get("section_number"))
-        
-        chat_logger.info(f"Metadata stats: {len(chapters_found)} chapters, {len(sections_found)} sections found")
-        
-        return chunks_with_metadata
 
+            # Initialize LlamaIndex SentenceSplitter
+            self.sentence_splitter = SentenceSplitter(
+                chunk_size=settings.LLAMAINDEX_CHUNK_SIZE,
+                chunk_overlap=settings.LLAMAINDEX_CHUNK_OVERLAP,
+                separator=" ",
+                paragraph_separator="\n\n",
+            )
+
+            self.is_initialized = True
+            logger.info("Chunking service initialized successfully")
+
+        except Exception as e:
+            logger.error(
+                f"Failed to initialize chunking service: {str(e)}",
+                extra={"extra_fields": {"error_type": type(e).__name__}},
+            )
+            self.is_initialized = False
+            raise
+
+    async def chunk_documents(
+        self, documents: List[Document]
+    ) -> List[TextNode]:
+        """Chunk documents into smaller text nodes using LlamaIndex."""
+        if not self.is_initialized or not self.sentence_splitter:
+            raise RuntimeError("Chunking service not initialized")
+
+        try:
+            logger.info(
+                "Chunking documents",
+                extra={
+                    "extra_fields": {
+                        "document_count": len(documents),
+                        "total_chars": sum(len(doc.text) for doc in documents),
+                    }
+                },
+            )
+
+            # Use LlamaIndex node parser to create chunks
+            nodes = self.sentence_splitter.get_nodes_from_documents(documents)
+
+            # Enrich nodes with additional metadata
+            for i, node in enumerate(nodes):
+                node.metadata.update(
+                    {
+                        "chunk_index": i,
+                        "chunk_size": len(node.text),
+                        "total_chunks": len(nodes),
+                    }
+                )
+
+            logger.info(
+                "Successfully chunked documents",
+                extra={
+                    "extra_fields": {
+                        "document_count": len(documents),
+                        "chunk_count": len(nodes),
+                        "avg_chunk_size": (
+                            sum(len(node.text) for node in nodes) / len(nodes)
+                            if nodes
+                            else 0
+                        ),
+                    }
+                },
+            )
+
+            return nodes
+
+        except Exception as e:
+            logger.error(
+                f"Failed to chunk documents: {str(e)}",
+                extra={
+                    "extra_fields": {
+                        "error_type": type(e).__name__,
+                        "document_count": len(documents),
+                    }
+                },
+            )
+            raise
+
+    async def chunk_text(
+        self, text: str, metadata: Optional[Dict[str, Any]] = None
+    ) -> List[TextNode]:
+        """Chunk raw text into nodes."""
+        if not self.is_initialized or not self.sentence_splitter:
+            raise RuntimeError("Chunking service not initialized")
+
+        try:
+            logger.debug(
+                f"Chunking text",
+                extra={"extra_fields": {"text_length": len(text)}},
+            )
+
+            # Create a document from text
+            doc = Document(text=text, metadata=metadata or {})
+
+            # Chunk the document
+            nodes = await self.chunk_documents([doc])
+
+            logger.debug(
+                f"Successfully chunked text",
+                extra={
+                    "extra_fields": {
+                        "text_length": len(text),
+                        "chunk_count": len(nodes),
+                    }
+                },
+            )
+
+            return nodes
+
+        except Exception as e:
+            logger.error(
+                f"Failed to chunk text: {str(e)}",
+                extra={
+                    "extra_fields": {
+                        "error_type": type(e).__name__,
+                        "text_length": len(text),
+                    }
+                },
+            )
+            raise
+
+    def get_chunk_stats(self, nodes: List[TextNode]) -> Dict[str, Any]:
+        """Get statistics about chunks."""
+        try:
+            if not nodes:
+                return {
+                    "chunk_count": 0,
+                    "total_chars": 0,
+                    "avg_chunk_size": 0,
+                    "min_chunk_size": 0,
+                    "max_chunk_size": 0,
+                }
+
+            chunk_sizes = [len(node.text) for node in nodes]
+
+            return {
+                "chunk_count": len(nodes),
+                "total_chars": sum(chunk_sizes),
+                "avg_chunk_size": sum(chunk_sizes) / len(chunk_sizes),
+                "min_chunk_size": min(chunk_sizes),
+                "max_chunk_size": max(chunk_sizes),
+            }
+
+        except Exception as e:
+            logger.error(
+                f"Failed to get chunk stats: {str(e)}",
+                extra={"extra_fields": {"error_type": type(e).__name__}},
+            )
+            return {"error": str(e)}
+
+    async def merge_small_chunks(
+        self, nodes: List[TextNode], min_size: int = 100
+    ) -> List[TextNode]:
+        """Merge chunks that are too small."""
+        try:
+            logger.debug(
+                f"Merging small chunks",
+                extra={
+                    "extra_fields": {
+                        "node_count": len(nodes),
+                        "min_size": min_size,
+                    }
+                },
+            )
+
+            merged_nodes = []
+            current_node = None
+
+            for node in nodes:
+                if current_node is None:
+                    current_node = node
+                elif len(current_node.text) < min_size:
+                    # Merge with current node
+                    current_node.text = f"{current_node.text} {node.text}"
+                    # Update metadata
+                    current_node.metadata["chunk_size"] = len(current_node.text)
+                else:
+                    merged_nodes.append(current_node)
+                    current_node = node
+
+            # Add the last node
+            if current_node is not None:
+                merged_nodes.append(current_node)
+
+            logger.debug(
+                f"Successfully merged small chunks",
+                extra={
+                    "extra_fields": {
+                        "original_count": len(nodes),
+                        "merged_count": len(merged_nodes),
+                    }
+                },
+            )
+
+            return merged_nodes
+
+        except Exception as e:
+            logger.error(
+                f"Failed to merge small chunks: {str(e)}",
+                extra={"extra_fields": {"error_type": type(e).__name__}},
+            )
+            raise
+
+
+# Global singleton instance
 chunking_service = ChunkingService()

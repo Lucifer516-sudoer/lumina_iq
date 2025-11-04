@@ -7,12 +7,23 @@ Handles missing or corrupted NLTK data gracefully.
 import os
 import shutil
 import logging
+import json
 from pathlib import Path
 import nltk
-from utils.logging_config import get_logger
+from utils.logger import get_logger
 
 # Use enhanced logger
 logger = get_logger("nltk_init")
+
+# Get NLTK data path first
+def get_nltk_data_path():
+    """Get the NLTK data directory path"""
+    # Use environment variable if set, otherwise default to user home
+    nltk_data = os.getenv("NLTK_DATA", os.path.expanduser("~/nltk_data"))
+    return Path(nltk_data)
+
+# Cache file to track downloaded resources
+NLTK_CACHE_FILE = get_nltk_data_path() / ".nltk_cache.json"
 
 
 def get_nltk_data_path():
@@ -28,6 +39,41 @@ def ensure_nltk_data_exists():
     nltk_data_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"NLTK data directory: {nltk_data_path}")
     return nltk_data_path
+
+
+def load_downloaded_resources():
+    """Load the cache of downloaded NLTK resources"""
+    if NLTK_CACHE_FILE.exists():
+        try:
+            with open(NLTK_CACHE_FILE, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load NLTK cache file: {e}")
+            return {}
+    return {}
+
+
+def save_downloaded_resources(resources):
+    """Save the cache of downloaded NLTK resources"""
+    try:
+        NLTK_CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(NLTK_CACHE_FILE, "w") as f:
+            json.dump(resources, f, indent=2)
+    except Exception as e:
+        logger.warning(f"Failed to save NLTK cache file: {e}")
+
+
+def is_resource_downloaded(resource_name):
+    """Check if a resource has been successfully downloaded and cached"""
+    cached_resources = load_downloaded_resources()
+    return resource_name in cached_resources
+
+
+def mark_resource_downloaded(resource_name):
+    """Mark a resource as successfully downloaded"""
+    cached_resources = load_downloaded_resources()
+    cached_resources[resource_name] = True
+    save_downloaded_resources(cached_resources)
 
 
 def is_nltk_data_corrupted(file_path):
@@ -46,11 +92,19 @@ def is_nltk_data_corrupted(file_path):
 
 
 def download_nltk_resource(resource_name, force=False):
-    """Download a specific NLTK resource with error handling"""
+    """Download a specific NLTK resource with error handling and caching"""
+    # Check if already downloaded and cached (unless force is True)
+    if not force and is_resource_downloaded(resource_name):
+        logger.debug(f"NLTK resource {resource_name} already downloaded (cached)")
+        return True
+
     try:
         logger.info(f"Downloading NLTK resource: {resource_name}")
         nltk.download(resource_name, quiet=True, force=force)
         logger.info(f"Successfully downloaded NLTK resource: {resource_name}")
+
+        # Mark as downloaded in cache
+        mark_resource_downloaded(resource_name)
         return True
     except Exception as e:
         logger.error(f"Failed to download NLTK resource {resource_name}: {e}")
@@ -89,59 +143,74 @@ def initialize_nltk_data():
     """
     logger.info("Initializing NLTK data...")
 
-    # Ensure NLTK data directory exists
-    nltk_data_path = ensure_nltk_data_exists()
-
-    # Clean up any corrupted data
-    cleanup_corrupted_nltk_data()
-
-    # Required NLTK resources for LlamaIndex and text processing
-    required_resources = [
-        "punkt_tab",  # Sentence tokenizer (required by LlamaIndex)
-        "stopwords",  # Stop words for text processing
-        "wordnet",  # WordNet for semantic analysis
-        "averaged_perceptron_tagger",  # POS tagger
-    ]
-
-    missing_resources = []
-
-    # Check which resources are missing or corrupted
-    for resource in required_resources:
-        try:
-            # Try to find the resource
-            nltk.data.find(
-                f"tokenizers/{resource}"
-                if resource == "punkt_tab"
-                else f"corpora/{resource}"
-                if resource in ["stopwords", "wordnet"]
-                else f"taggers/{resource}"
-            )
-            logger.debug(f"NLTK resource {resource} is available")
-        except LookupError:
-            missing_resources.append(resource)
-            logger.warning(f"NLTK resource {resource} is missing")
-
-    # Download missing resources
-    if missing_resources:
-        logger.info(f"Downloading missing NLTK resources: {missing_resources}")
-        for resource in missing_resources:
-            success = download_nltk_resource(resource, force=True)
-            if not success:
-                logger.error(f"Failed to download NLTK resource: {resource}")
-                # Continue with other resources even if one fails
-
-    # Verify punkt_tab tokenizer specifically (critical for LlamaIndex)
     try:
-        nltk.data.find("tokenizers/punkt_tab")
-        logger.info("NLTK punkt_tab tokenizer is ready")
-    except LookupError:
-        logger.error(
-            "Failed to initialize NLTK punkt_tab tokenizer - this may cause issues with LlamaIndex"
-        )
-        # Try one more time to download
-        download_nltk_resource("punkt_tab", force=True)
+        # Ensure NLTK data directory exists
+        nltk_data_path = ensure_nltk_data_exists()
 
-    logger.info("NLTK data initialization completed")
+        # Clean up any corrupted data
+        cleanup_corrupted_nltk_data()
+
+        # Required NLTK resources for LlamaIndex and text processing
+        required_resources = [
+            "punkt_tab",  # Sentence tokenizer (required by LlamaIndex)
+            "stopwords",  # Stop words for text processing
+            "wordnet",  # WordNet for semantic analysis
+            "averaged_perceptron_tagger",  # POS tagger
+        ]
+
+        missing_resources = []
+
+        # Check which resources are missing or corrupted, but also check cache
+        for resource in required_resources:
+            try:
+                # Try to find the resource
+                nltk.data.find(
+                    f"tokenizers/{resource}"
+                    if resource == "punkt_tab"
+                    else f"corpora/{resource}"
+                    if resource in ["stopwords", "wordnet"]
+                    else f"taggers/{resource}"
+                )
+                logger.debug(f"NLTK resource {resource} is available")
+                # Ensure it's marked as downloaded in cache
+                if not is_resource_downloaded(resource):
+                    mark_resource_downloaded(resource)
+            except LookupError:
+                # Check if it's cached as downloaded but not found
+                if is_resource_downloaded(resource):
+                    logger.warning(f"NLTK resource {resource} cached as downloaded but not found - will re-download")
+                    # Force re-download
+                    missing_resources.append((resource, True))
+                else:
+                    missing_resources.append((resource, False))
+                    logger.warning(f"NLTK resource {resource} is missing")
+
+        # Download missing resources
+        if missing_resources:
+            logger.info(f"Downloading missing NLTK resources: {[r[0] for r in missing_resources]}")
+            for resource, force_redownload in missing_resources:
+                success = download_nltk_resource(resource, force=force_redownload)
+                if not success:
+                    logger.error(f"Failed to download NLTK resource: {resource}")
+                    # Continue with other resources even if one fails
+
+        # Verify punkt_tab tokenizer specifically (critical for LlamaIndex)
+        try:
+            nltk.data.find("tokenizers/punkt_tab")
+            logger.info("NLTK punkt_tab tokenizer is ready")
+        except LookupError:
+            logger.error(
+                "Failed to initialize NLTK punkt_tab tokenizer - this may cause issues with LlamaIndex"
+            )
+            # Try one more time to download
+            download_nltk_resource("punkt_tab", force=True)
+
+        logger.info("NLTK data initialization completed")
+
+    except Exception as e:
+        logger.error(f"Critical error during NLTK initialization: {str(e)}")
+        logger.warning("NLTK initialization failed - text processing features may be limited")
+        # Don't raise exception - allow application to continue without NLTK
 
 
 def safe_nltk_operation(operation_name, operation_func, *args, **kwargs):
@@ -160,7 +229,7 @@ def safe_nltk_operation(operation_name, operation_func, *args, **kwargs):
         return operation_func(*args, **kwargs)
     except LookupError as e:
         logger.warning(f"NLTK resource missing for {operation_name}: {e}")
-        # Try to download the required resource
+        # Try to download the required resource (with caching)
         if "punkt" in str(e).lower():
             download_nltk_resource("punkt_tab")
         elif "stopwords" in str(e).lower():
@@ -181,8 +250,5 @@ def safe_nltk_operation(operation_name, operation_func, *args, **kwargs):
         return None
 
 
-# Initialize NLTK data when module is imported
-try:
-    initialize_nltk_data()
-except Exception as e:
-    logger.error(f"Failed to initialize NLTK data: {e}")
+# NOTE: NLTK data initialization is now handled in main.py lifespan to prevent duplicate initialization
+# and ensure it only happens once per application startup

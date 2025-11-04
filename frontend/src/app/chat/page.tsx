@@ -50,7 +50,7 @@ export default function ChatPage() {
         pdfApi.getPDFInfo()
       ]);
 
-      setChatHistory(historyData.history);
+      setChatHistory(historyData?.history || []);
       setPdfInfo(pdfData);
     } catch (error) {
       console.error('Failed to load initial data:', error);

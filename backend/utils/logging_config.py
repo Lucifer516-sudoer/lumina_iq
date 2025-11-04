@@ -1,11 +1,13 @@
 """
-Enhanced logging configuration with Rich formatting and better log management.
+Enhanced logging configuration with Rich formatting, structured logging, and request ID support.
 """
 
 import json
 import logging
 import os
 import sys
+import uuid
+import threading
 from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
@@ -16,6 +18,9 @@ from config.settings import settings
 # Suppress Google Cloud ALTS warnings at module level
 os.environ["GRPC_VERBOSITY"] = "ERROR"
 os.environ["GRPC_TRACE"] = ""
+
+# Thread-local storage for request ID
+_local = threading.local()
 
 try:
     from rich.console import Console
@@ -47,8 +52,8 @@ except ImportError:
     console = None
 
 
-class JSONFormatter(logging.Formatter):
-    """Custom formatter for structured JSON logging."""
+class StructuredJSONFormatter(logging.Formatter):
+    """Custom formatter for structured JSON logging with request ID support."""
 
     def format(self, record):
         log_entry = {
@@ -60,13 +65,53 @@ class JSONFormatter(logging.Formatter):
             "function": record.funcName,
             "line": record.lineno,
         }
+
+        # Add request ID if available
+        request_id = getattr(_local, 'request_id', None)
+        if request_id:
+            log_entry["request_id"] = request_id
+
+        # Add any additional fields from record
+        if hasattr(record, 'extra_fields'):
+            log_entry.update(record.extra_fields)
+
         if record.exc_info:
             log_entry["exception"] = self.formatException(record.exc_info)
-        return json.dumps(log_entry)
+
+        return json.dumps(log_entry, ensure_ascii=False)
+
+
+class RequestIdFilter(logging.Filter):
+    """Filter to add request ID to log records."""
+
+    def filter(self, record):
+        request_id = getattr(_local, 'request_id', None)
+        if request_id:
+            record.request_id = request_id
+        return True
+
+
+def set_request_id(request_id: Optional[str] = None) -> str:
+    """Set the request ID for the current thread."""
+    if request_id is None:
+        request_id = str(uuid.uuid4())
+    _local.request_id = request_id
+    return request_id
+
+
+def get_request_id() -> Optional[str]:
+    """Get the current request ID."""
+    return getattr(_local, 'request_id', None)
+
+
+def clear_request_id():
+    """Clear the request ID for the current thread."""
+    if hasattr(_local, 'request_id'):
+        delattr(_local, 'request_id')
 
 
 def configure_logging():
-    """Configure enhanced logging with Rich formatting"""
+    """Configure enhanced logging with Rich formatting and structured logging."""
 
     # Only configure logging once per process
     if hasattr(logging, "_configured_for_multiworker"):
@@ -95,7 +140,7 @@ def configure_logging():
         "ERROR": logging.ERROR,
         "CRITICAL": logging.CRITICAL,
     }
-    log_level = log_level_map.get(log_level_str, logging.WARNING)
+    log_level = log_level_map.get(log_level_str, logging.INFO)
 
     # Configure root logger
     root_logger = logging.getLogger()
@@ -104,6 +149,9 @@ def configure_logging():
     # Remove existing handlers
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
+
+    # Add request ID filter to root logger
+    root_logger.addFilter(RequestIdFilter())
 
     # Set up console handler for all workers to ensure logs are visible
     if RICH_AVAILABLE:
@@ -136,7 +184,7 @@ def configure_logging():
         encoding="utf-8",
     )
     file_handler.setLevel(log_level)
-    file_handler.setFormatter(JSONFormatter())
+    file_handler.setFormatter(StructuredJSONFormatter())
     root_logger.addHandler(file_handler)
 
     # Configure specific loggers to prevent spam
@@ -153,3 +201,16 @@ def get_logger(name: str):
     """Get a logger with enhanced configuration"""
     configure_logging()
     return logging.getLogger(name)
+
+
+def log_performance(logger, operation: str, duration: float, extra_fields: Optional[dict] = None):
+    """Log performance metrics with structured data."""
+    log_data = {
+        "operation": operation,
+        "duration_ms": round(duration * 1000, 2),
+        "performance": True
+    }
+    if extra_fields:
+        log_data.update(extra_fields)
+
+    logger.info(f"Performance: {operation} completed in {log_data['duration_ms']}ms", extra={"extra_fields": log_data})

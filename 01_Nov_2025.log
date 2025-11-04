@@ -1,0 +1,323 @@
+Nov-01-2025 12:06:08 PM INFO     🚀 Starting Learning App Backend... run.py:41
+Nov-01-2025 12:06:08 PM INFO     🔧 Setting up frontend environment... run.py:44
+Nov-01-2025 12:06:08 PM INFO     Local IP address detected: 172.16.17.87 ip_detector.py:33
+Nov-01-2025 12:06:08 PM INFO     Updated frontend .env file with new API URL: http://172.16.17.87:8000/api ip_detector.py:86
+Nov-01-2025 12:06:08 PM INFO     Updated frontend .env file: C:\Users\ACER\Documents\dev\lumina_iq\frontend\.env ip_detector.py:87
+Nov-01-2025 12:06:08 PM DEBUG    📍 Server will run on: http://0.0.0.0:8000 run.py:47
+Nov-01-2025 12:06:08 PM DEBUG    🌐 Accessible at: http://172.16.17.87:8000 run.py:48
+Nov-01-2025 12:06:08 PM DEBUG    📚 Books directory: C:\Users\ACER\Documents\dev\lumina_iq\books run.py:49
+Nov-01-2025 12:06:08 PM DEBUG    🔑 Using Together.ai model: meta-llama/Llama-3.3-70B-Instruct-Turbo-Free run.py:50
+Nov-01-2025 12:17:04 PM INFO     Starting Lumina IQ Backend run.py:86
+Nov-01-2025 12:17:04 PM DEBUG    Third-party logger configuration complete run.py:68
+Nov-01-2025 12:17:04 PM INFO     Local IP address detected: 172.16.17.87 ip_detector.py:33
+Nov-01-2025 12:17:04 PM INFO     Updated frontend .env file with new API URL: http://172.16.17.87:8000/api ip_detector.py:86
+Nov-01-2025 12:17:04 PM INFO     Updated frontend .env file: C:\Users\ACER\Documents\dev\lumina_iq\frontend\.env ip_detector.py:87
+Nov-01-2025 12:17:04 PM INFO     Frontend environment configured run.py:104
+Nov-01-2025 12:17:04 PM INFO     Server configuration run.py:121
+Nov-01-2025 12:17:04 PM INFO     Server starting run.py:167
+Nov-01-2025 12:17:10 PM CRITICAL Failed to start server: No module named 'services.pdf_service' run.py:186
+Nov-01-2025 12:22:07 PM INFO     Starting Lumina IQ Backend run.py:86
+Nov-01-2025 12:22:07 PM DEBUG    Third-party logger configuration complete run.py:68
+Nov-01-2025 12:22:07 PM WARNING  Failed to configure frontend environment: 'charmap' codec can't encode character '\U0001f50d' in position 0: character maps to <undefined> run.py:114
+Nov-01-2025 12:22:07 PM INFO     Server configuration run.py:121
+Nov-01-2025 12:22:07 PM INFO     Server starting run.py:167
+Nov-01-2025 12:22:11 PM CRITICAL Failed to start server: No module named 'services.health_service' run.py:186
+Nov-01-2025 12:24:06 PM INFO     Starting Lumina IQ Backend run.py:86
+Nov-01-2025 12:24:06 PM DEBUG    Third-party logger configuration complete run.py:68
+Nov-01-2025 12:24:06 PM WARNING  Failed to configure frontend environment: 'charmap' codec can't encode character '\U0001f50d' in position 0: character maps to <undefined> run.py:114
+Nov-01-2025 12:24:06 PM INFO     Server configuration run.py:121
+Nov-01-2025 12:24:06 PM INFO     Server starting run.py:167
+Nov-01-2025 12:24:09 PM INFO     Starting Learning App API main.py:45
+Nov-01-2025 12:24:09 PM INFO     Initializing authentication service... main.py:61
+Nov-01-2025 12:24:09 PM INFO     Initializing authentication service auth_service.py:25
+Nov-01-2025 12:24:09 PM INFO     Authentication service initialized successfully auth_service.py:27
+Nov-01-2025 12:24:09 PM INFO     Performance: auth_initialization completed in 2.0ms logging_config.py:216
+Nov-01-2025 12:24:09 PM INFO     Authentication service initialized successfully main.py:68
+Nov-01-2025 12:24:09 PM INFO     Initializing NLTK data... main.py:84
+Nov-01-2025 12:24:09 PM INFO     Initializing NLTK data... nltk_init.py:144
+Nov-01-2025 12:24:09 PM INFO     NLTK data directory: C:\Users\ACER\nltk_data nltk_init.py:40
+Nov-01-2025 12:24:09 PM DEBUG    NLTK resource punkt_tab is available nltk_init.py:174
+Nov-01-2025 12:24:09 PM DEBUG    NLTK resource stopwords is available nltk_init.py:174
+Nov-01-2025 12:24:09 PM WARNING  NLTK resource wordnet is missing nltk_init.py:186
+Nov-01-2025 12:24:09 PM WARNING  NLTK resource averaged_perceptron_tagger is missing nltk_init.py:186
+Nov-01-2025 12:24:09 PM INFO     Downloading missing NLTK resources: ['wordnet', 'averaged_perceptron_tagger'] nltk_init.py:190
+Nov-01-2025 12:24:09 PM INFO     Downloading NLTK resource: wordnet nltk_init.py:102
+Nov-01-2025 12:24:10 PM INFO     Successfully downloaded NLTK resource: wordnet nltk_init.py:104
+Nov-01-2025 12:24:10 PM INFO     Downloading NLTK resource: averaged_perceptron_tagger nltk_init.py:102
+Nov-01-2025 12:24:10 PM INFO     Successfully downloaded NLTK resource: averaged_perceptron_tagger nltk_init.py:104
+Nov-01-2025 12:24:10 PM INFO     NLTK punkt_tab tokenizer is ready nltk_init.py:200
+Nov-01-2025 12:24:10 PM INFO     NLTK data initialization completed nltk_init.py:208
+Nov-01-2025 12:24:10 PM INFO     Performance: nltk_initialization completed in 821.41ms logging_config.py:216
+Nov-01-2025 12:24:10 PM INFO     NLTK data initialized successfully main.py:89
+Nov-01-2025 12:24:10 PM INFO     Initializing cache service... main.py:106
+Nov-01-2025 12:24:10 PM INFO     Initializing Redis cache service cache_service.py:34
+Nov-01-2025 12:24:10 PM ERROR    Failed to initialize Redis cache service: Authentication required cache_service.py:56
+Nov-01-2025 12:24:10 PM ERROR    Failed to initialize cache service: Authentication required main.py:116
+Nov-01-2025 12:24:10 PM WARNING  Application will continue without caching - performance may be degraded main.py:125
+Nov-01-2025 12:24:10 PM INFO     Initializing Together AI service... main.py:132
+Nov-01-2025 12:24:10 PM INFO     Initializing Together AI service together_service.py:29
+Nov-01-2025 12:24:10 PM INFO     Together AI service initialized successfully together_service.py:42
+Nov-01-2025 12:24:10 PM INFO     Performance: together_initialization completed in 2.99ms logging_config.py:216
+Nov-01-2025 12:24:10 PM INFO     Together AI service initialized successfully main.py:139
+Nov-01-2025 12:24:10 PM INFO     Initializing RAG orchestrator... main.py:155
+Nov-01-2025 12:24:10 PM INFO     Initializing RAG orchestrator rag_orchestrator.py:32
+Nov-01-2025 12:24:10 PM INFO     Initializing document service document_service.py:28
+Nov-01-2025 12:24:10 PM INFO     Document service initialized successfully document_service.py:35
+Nov-01-2025 12:24:10 PM INFO     Initializing chunking service chunking_service.py:27
+Nov-01-2025 12:24:10 PM INFO     Chunking service initialized successfully chunking_service.py:46
+Nov-01-2025 12:24:10 PM INFO     Initializing embedding service embedding_service.py:30
+Nov-01-2025 12:24:15 PM INFO     Embedding service initialized successfully embedding_service.py:50
+Nov-01-2025 12:24:15 PM INFO     Initializing Qdrant service qdrant_service.py:36
+Nov-01-2025 12:24:17 PM INFO     Creating collection: lumina_iq_documents_prod qdrant_service.py:57
+Nov-01-2025 12:24:17 PM INFO     Collection created: lumina_iq_documents_prod qdrant_service.py:75
+Nov-01-2025 12:24:17 PM INFO     Qdrant service initialized successfully qdrant_service.py:80
+Nov-01-2025 12:24:17 PM INFO     Initializing chat service chat_service.py:31
+Nov-01-2025 12:24:17 PM INFO     Chat service initialized successfully chat_service.py:51
+Nov-01-2025 12:24:17 PM INFO     RAG orchestrator initialized successfully rag_orchestrator.py:42
+Nov-01-2025 12:24:17 PM INFO     Performance: rag_initialization completed in 7099.66ms logging_config.py:216
+Nov-01-2025 12:24:17 PM INFO     RAG orchestrator initialized successfully main.py:162
+Nov-01-2025 12:24:17 PM INFO     Initializing Celery service... main.py:178
+Nov-01-2025 12:24:17 PM INFO     Initializing Celery service celery_service.py:26
+Nov-01-2025 12:24:17 PM INFO     Celery service initialized successfully celery_service.py:67
+Nov-01-2025 12:24:17 PM INFO     Performance: celery_initialization completed in 28.95ms logging_config.py:216
+Nov-01-2025 12:24:17 PM INFO     Celery service initialized successfully main.py:185
+Nov-01-2025 12:24:17 PM INFO     Service initialization complete main.py:239
+Nov-01-2025 12:24:17 PM WARNING  Failed services detected: Cache main.py:252
+Nov-01-2025 12:24:59 PM INFO     Starting Lumina IQ Backend run.py:90
+Nov-01-2025 12:24:59 PM DEBUG    Third-party logger configuration complete run.py:72
+Nov-01-2025 12:24:59 PM WARNING  Failed to configure frontend environment: 'charmap' codec can't encode character '\U0001f50d' in position 0: character maps to <undefined> run.py:118
+Nov-01-2025 12:24:59 PM INFO     Server configuration run.py:125
+Nov-01-2025 12:24:59 PM INFO     Server starting run.py:171
+Nov-01-2025 12:25:02 PM INFO     Starting Learning App API main.py:45
+Nov-01-2025 12:25:02 PM INFO     Initializing authentication service... main.py:61
+Nov-01-2025 12:25:02 PM INFO     Initializing authentication service auth_service.py:25
+Nov-01-2025 12:25:02 PM INFO     Authentication service initialized successfully auth_service.py:27
+Nov-01-2025 12:25:02 PM INFO     Performance: auth_initialization completed in 2.0ms logging_config.py:216
+Nov-01-2025 12:25:02 PM INFO     Authentication service initialized successfully main.py:68
+Nov-01-2025 12:25:02 PM INFO     Initializing NLTK data... main.py:84
+Nov-01-2025 12:25:02 PM INFO     Initializing NLTK data... nltk_init.py:144
+Nov-01-2025 12:25:02 PM INFO     NLTK data directory: C:\Users\ACER\nltk_data nltk_init.py:40
+Nov-01-2025 12:25:02 PM DEBUG    NLTK resource punkt_tab is available nltk_init.py:174
+Nov-01-2025 12:25:02 PM DEBUG    NLTK resource stopwords is available nltk_init.py:174
+Nov-01-2025 12:25:02 PM WARNING  NLTK resource wordnet cached as downloaded but not found - will re-download nltk_init.py:181
+Nov-01-2025 12:25:02 PM DEBUG    NLTK resource averaged_perceptron_tagger is available nltk_init.py:174
+Nov-01-2025 12:25:02 PM INFO     Downloading missing NLTK resources: ['wordnet'] nltk_init.py:190
+Nov-01-2025 12:25:02 PM INFO     Downloading NLTK resource: wordnet nltk_init.py:102
+Nov-01-2025 12:25:02 PM INFO     Successfully downloaded NLTK resource: wordnet nltk_init.py:104
+Nov-01-2025 12:25:02 PM INFO     NLTK punkt_tab tokenizer is ready nltk_init.py:200
+Nov-01-2025 12:25:02 PM INFO     NLTK data initialization completed nltk_init.py:208
+Nov-01-2025 12:25:02 PM INFO     Performance: nltk_initialization completed in 317.34ms logging_config.py:216
+Nov-01-2025 12:25:02 PM INFO     NLTK data initialized successfully main.py:89
+Nov-01-2025 12:25:02 PM INFO     Initializing cache service... main.py:106
+Nov-01-2025 12:25:02 PM INFO     Initializing Redis cache service cache_service.py:34
+Nov-01-2025 12:25:03 PM ERROR    Failed to initialize Redis cache service: Authentication required cache_service.py:56
+Nov-01-2025 12:25:03 PM ERROR    Failed to initialize cache service: Authentication required main.py:116
+Nov-01-2025 12:25:03 PM WARNING  Application will continue without caching - performance may be degraded main.py:125
+Nov-01-2025 12:25:03 PM INFO     Initializing Together AI service... main.py:132
+Nov-01-2025 12:25:03 PM INFO     Initializing Together AI service together_service.py:29
+Nov-01-2025 12:25:03 PM INFO     Together AI service initialized successfully together_service.py:42
+Nov-01-2025 12:25:03 PM INFO     Performance: together_initialization completed in 2.89ms logging_config.py:216
+Nov-01-2025 12:25:03 PM INFO     Together AI service initialized successfully main.py:139
+Nov-01-2025 12:25:03 PM INFO     Initializing RAG orchestrator... main.py:155
+Nov-01-2025 12:25:03 PM INFO     Initializing RAG orchestrator rag_orchestrator.py:32
+Nov-01-2025 12:25:03 PM INFO     Initializing document service document_service.py:28
+Nov-01-2025 12:25:03 PM INFO     Document service initialized successfully document_service.py:35
+Nov-01-2025 12:25:03 PM INFO     Initializing chunking service chunking_service.py:27
+Nov-01-2025 12:25:03 PM INFO     Chunking service initialized successfully chunking_service.py:46
+Nov-01-2025 12:25:03 PM INFO     Initializing embedding service embedding_service.py:30
+Nov-01-2025 12:25:03 PM INFO     Embedding service initialized successfully embedding_service.py:50
+Nov-01-2025 12:25:03 PM INFO     Initializing Qdrant service qdrant_service.py:36
+Nov-01-2025 12:25:05 PM INFO     Collection already exists: lumina_iq_documents_prod qdrant_service.py:77
+Nov-01-2025 12:25:05 PM INFO     Qdrant service initialized successfully qdrant_service.py:80
+Nov-01-2025 12:25:05 PM INFO     Initializing chat service chat_service.py:31
+Nov-01-2025 12:25:05 PM INFO     Chat service initialized successfully chat_service.py:51
+Nov-01-2025 12:25:05 PM INFO     RAG orchestrator initialized successfully rag_orchestrator.py:42
+Nov-01-2025 12:25:05 PM INFO     Performance: rag_initialization completed in 1657.93ms logging_config.py:216
+Nov-01-2025 12:25:05 PM INFO     RAG orchestrator initialized successfully main.py:162
+Nov-01-2025 12:25:05 PM INFO     Initializing Celery service... main.py:178
+Nov-01-2025 12:25:05 PM INFO     Initializing Celery service celery_service.py:26
+Nov-01-2025 12:25:05 PM INFO     Celery service initialized successfully celery_service.py:67
+Nov-01-2025 12:25:05 PM INFO     Performance: celery_initialization completed in 4.03ms logging_config.py:216
+Nov-01-2025 12:25:05 PM INFO     Celery service initialized successfully main.py:185
+Nov-01-2025 12:25:05 PM INFO     Service initialization complete main.py:239
+Nov-01-2025 12:25:05 PM WARNING  Failed services detected: Cache main.py:252
+Nov-01-2025 12:25:05 PM DEBUG    Shutting down Learning App API... main.py:256
+Nov-01-2025 12:28:04 PM INFO     Starting Lumina IQ Backend run.py:90
+Nov-01-2025 12:28:04 PM DEBUG    Third-party logger configuration complete run.py:72
+Nov-01-2025 12:28:04 PM INFO     Local IP address detected: 172.16.17.87 ip_detector.py:33
+Nov-01-2025 12:28:04 PM INFO     Updated frontend .env file with new API URL: http://172.16.17.87:8000/api ip_detector.py:86
+Nov-01-2025 12:28:04 PM INFO     Updated frontend .env file: C:\Users\ACER\Documents\dev\lumina_iq\frontend\.env ip_detector.py:87
+Nov-01-2025 12:28:04 PM INFO     Frontend environment configured run.py:108
+Nov-01-2025 12:28:04 PM INFO     Server configuration run.py:125
+Nov-01-2025 12:28:04 PM INFO     Server starting run.py:171
+Nov-01-2025 12:28:06 PM INFO     Starting Learning App API main.py:45
+Nov-01-2025 12:28:06 PM INFO     Initializing authentication service... main.py:61
+Nov-01-2025 12:28:06 PM INFO     Initializing authentication service auth_service.py:25
+Nov-01-2025 12:28:06 PM INFO     Authentication service initialized successfully auth_service.py:27
+Nov-01-2025 12:28:06 PM INFO     Performance: auth_initialization completed in 4.21ms logging_config.py:216
+Nov-01-2025 12:28:07 PM INFO     Authentication service initialized successfully main.py:68
+Nov-01-2025 12:28:07 PM INFO     Initializing NLTK data... main.py:84
+Nov-01-2025 12:28:07 PM INFO     Initializing NLTK data... nltk_init.py:144
+Nov-01-2025 12:28:07 PM INFO     NLTK data directory: C:\Users\ACER\nltk_data nltk_init.py:40
+Nov-01-2025 12:28:07 PM DEBUG    NLTK resource punkt_tab is available nltk_init.py:174
+Nov-01-2025 12:28:07 PM DEBUG    NLTK resource stopwords is available nltk_init.py:174
+Nov-01-2025 12:28:07 PM WARNING  NLTK resource wordnet cached as downloaded but not found - will re-download nltk_init.py:181
+Nov-01-2025 12:28:07 PM DEBUG    NLTK resource averaged_perceptron_tagger is available nltk_init.py:174
+Nov-01-2025 12:28:07 PM INFO     Downloading missing NLTK resources: ['wordnet'] nltk_init.py:190
+Nov-01-2025 12:28:07 PM INFO     Downloading NLTK resource: wordnet nltk_init.py:102
+Nov-01-2025 12:28:07 PM INFO     Successfully downloaded NLTK resource: wordnet nltk_init.py:104
+Nov-01-2025 12:28:07 PM INFO     NLTK punkt_tab tokenizer is ready nltk_init.py:200
+Nov-01-2025 12:28:07 PM INFO     NLTK data initialization completed nltk_init.py:208
+Nov-01-2025 12:28:07 PM INFO     Performance: nltk_initialization completed in 608.55ms logging_config.py:216
+Nov-01-2025 12:28:07 PM INFO     NLTK data initialized successfully main.py:89
+Nov-01-2025 12:28:07 PM INFO     Initializing cache service... main.py:106
+Nov-01-2025 12:28:07 PM INFO     Initializing Redis cache service cache_service.py:34
+Nov-01-2025 12:28:07 PM ERROR    Failed to initialize Redis cache service: Authentication required cache_service.py:56
+Nov-01-2025 12:28:07 PM ERROR    Failed to initialize cache service: Authentication required main.py:116
+Nov-01-2025 12:28:07 PM WARNING  Application will continue without caching - performance may be degraded main.py:125
+Nov-01-2025 12:28:07 PM INFO     Initializing Together AI service... main.py:132
+Nov-01-2025 12:28:07 PM INFO     Initializing Together AI service together_service.py:29
+Nov-01-2025 12:28:07 PM INFO     Together AI service initialized successfully together_service.py:42
+Nov-01-2025 12:28:07 PM INFO     Performance: together_initialization completed in 3.98ms logging_config.py:216
+Nov-01-2025 12:28:07 PM INFO     Together AI service initialized successfully main.py:139
+Nov-01-2025 12:28:07 PM INFO     Initializing RAG orchestrator... main.py:155
+Nov-01-2025 12:28:07 PM INFO     Initializing RAG orchestrator rag_orchestrator.py:32
+Nov-01-2025 12:28:07 PM INFO     Initializing document service document_service.py:28
+Nov-01-2025 12:28:07 PM INFO     Document service initialized successfully document_service.py:35
+Nov-01-2025 12:28:07 PM INFO     Initializing chunking service chunking_service.py:27
+Nov-01-2025 12:28:07 PM INFO     Chunking service initialized successfully chunking_service.py:46
+Nov-01-2025 12:28:07 PM INFO     Initializing embedding service embedding_service.py:30
+Nov-01-2025 12:28:08 PM INFO     Embedding service initialized successfully embedding_service.py:50
+Nov-01-2025 12:28:08 PM INFO     Initializing Qdrant service qdrant_service.py:36
+Nov-01-2025 12:28:09 PM INFO     Collection already exists: lumina_iq_documents_prod qdrant_service.py:77
+Nov-01-2025 12:28:09 PM INFO     Qdrant service initialized successfully qdrant_service.py:80
+Nov-01-2025 12:28:09 PM INFO     Initializing chat service chat_service.py:31
+Nov-01-2025 12:28:09 PM INFO     Chat service initialized successfully chat_service.py:51
+Nov-01-2025 12:28:09 PM INFO     RAG orchestrator initialized successfully rag_orchestrator.py:42
+Nov-01-2025 12:28:09 PM INFO     Performance: rag_initialization completed in 1521.94ms logging_config.py:216
+Nov-01-2025 12:28:09 PM INFO     RAG orchestrator initialized successfully main.py:162
+Nov-01-2025 12:28:09 PM INFO     Initializing Celery service... main.py:178
+Nov-01-2025 12:28:09 PM INFO     Initializing Celery service celery_service.py:26
+Nov-01-2025 12:28:09 PM INFO     Celery service initialized successfully celery_service.py:67
+Nov-01-2025 12:28:09 PM INFO     Performance: celery_initialization completed in 3.31ms logging_config.py:216
+Nov-01-2025 12:28:09 PM INFO     Celery service initialized successfully main.py:185
+Nov-01-2025 12:28:09 PM INFO     Service initialization complete main.py:239
+Nov-01-2025 12:28:09 PM WARNING  Failed services detected: Cache main.py:252
+Nov-01-2025 12:28:09 PM DEBUG    Shutting down Learning App API... main.py:256
+Nov-01-2025 12:31:58 PM INFO     Starting Lumina IQ Backend run.py:90
+Nov-01-2025 12:31:58 PM DEBUG    Third-party logger configuration complete run.py:72
+Nov-01-2025 12:31:58 PM WARNING  Failed to configure frontend environment: 'charmap' codec can't encode character '\U0001f50d' in position 0: character maps to <undefined> run.py:118
+Nov-01-2025 12:31:58 PM INFO     Server configuration run.py:125
+Nov-01-2025 12:31:58 PM INFO     Server starting run.py:171
+Nov-01-2025 12:32:00 PM INFO     Starting Learning App API main.py:45
+Nov-01-2025 12:32:00 PM INFO     Initializing authentication service... main.py:61
+Nov-01-2025 12:32:00 PM INFO     Initializing authentication service auth_service.py:25
+Nov-01-2025 12:32:00 PM INFO     Authentication service initialized successfully auth_service.py:27
+Nov-01-2025 12:32:00 PM INFO     Performance: auth_initialization completed in 2.0ms logging_config.py:216
+Nov-01-2025 12:32:00 PM INFO     Authentication service initialized successfully main.py:68
+Nov-01-2025 12:32:00 PM INFO     Initializing NLTK data... main.py:84
+Nov-01-2025 12:32:00 PM INFO     Initializing NLTK data... nltk_init.py:144
+Nov-01-2025 12:32:00 PM INFO     NLTK data directory: C:\Users\ACER\nltk_data nltk_init.py:40
+Nov-01-2025 12:32:00 PM DEBUG    NLTK resource punkt_tab is available nltk_init.py:174
+Nov-01-2025 12:32:00 PM DEBUG    NLTK resource stopwords is available nltk_init.py:174
+Nov-01-2025 12:32:00 PM WARNING  NLTK resource wordnet cached as downloaded but not found - will re-download nltk_init.py:181
+Nov-01-2025 12:32:00 PM DEBUG    NLTK resource averaged_perceptron_tagger is available nltk_init.py:174
+Nov-01-2025 12:32:00 PM INFO     Downloading missing NLTK resources: ['wordnet'] nltk_init.py:190
+Nov-01-2025 12:32:00 PM INFO     Downloading NLTK resource: wordnet nltk_init.py:102
+Nov-01-2025 12:32:01 PM INFO     Successfully downloaded NLTK resource: wordnet nltk_init.py:104
+Nov-01-2025 12:32:01 PM INFO     NLTK punkt_tab tokenizer is ready nltk_init.py:200
+Nov-01-2025 12:32:01 PM INFO     NLTK data initialization completed nltk_init.py:208
+Nov-01-2025 12:32:01 PM INFO     Performance: nltk_initialization completed in 445.97ms logging_config.py:216
+Nov-01-2025 12:32:01 PM INFO     NLTK data initialized successfully main.py:89
+Nov-01-2025 12:32:01 PM INFO     Initializing cache service... main.py:106
+Nov-01-2025 12:32:01 PM INFO     Initializing Redis cache service cache_service.py:34
+Nov-01-2025 12:32:01 PM ERROR    Failed to initialize Redis cache service: Authentication required cache_service.py:56
+Nov-01-2025 12:32:01 PM ERROR    Failed to initialize cache service: Authentication required main.py:116
+Nov-01-2025 12:32:01 PM WARNING  Application will continue without caching - performance may be degraded main.py:125
+Nov-01-2025 12:32:01 PM INFO     Initializing Together AI service... main.py:132
+Nov-01-2025 12:32:01 PM INFO     Initializing Together AI service together_service.py:29
+Nov-01-2025 12:32:01 PM INFO     Together AI service initialized successfully together_service.py:42
+Nov-01-2025 12:32:01 PM INFO     Performance: together_initialization completed in 7.0ms logging_config.py:216
+Nov-01-2025 12:32:01 PM INFO     Together AI service initialized successfully main.py:139
+Nov-01-2025 12:32:01 PM INFO     Initializing RAG orchestrator... main.py:155
+Nov-01-2025 12:32:01 PM INFO     Initializing RAG orchestrator rag_orchestrator.py:32
+Nov-01-2025 12:32:01 PM INFO     Initializing document service document_service.py:28
+Nov-01-2025 12:32:01 PM INFO     Document service initialized successfully document_service.py:35
+Nov-01-2025 12:32:01 PM INFO     Initializing chunking service chunking_service.py:27
+Nov-01-2025 12:32:01 PM INFO     Chunking service initialized successfully chunking_service.py:46
+Nov-01-2025 12:32:01 PM INFO     Initializing embedding service embedding_service.py:30
+Nov-01-2025 12:32:01 PM INFO     Embedding service initialized successfully embedding_service.py:50
+Nov-01-2025 12:32:01 PM INFO     Initializing Qdrant service qdrant_service.py:36
+Nov-01-2025 12:32:02 PM INFO     Collection already exists: lumina_iq_documents_prod qdrant_service.py:80
+Nov-01-2025 12:32:02 PM INFO     Qdrant service initialized successfully qdrant_service.py:83
+Nov-01-2025 12:32:02 PM INFO     Initializing chat service chat_service.py:31
+Nov-01-2025 12:32:02 PM INFO     Chat service initialized successfully chat_service.py:51
+Nov-01-2025 12:32:02 PM INFO     RAG orchestrator initialized successfully rag_orchestrator.py:42
+Nov-01-2025 12:32:02 PM INFO     Performance: rag_initialization completed in 1043.78ms logging_config.py:216
+Nov-01-2025 12:32:02 PM INFO     RAG orchestrator initialized successfully main.py:162
+Nov-01-2025 12:32:02 PM INFO     Initializing Celery service... main.py:178
+Nov-01-2025 12:32:02 PM INFO     Initializing Celery service celery_service.py:26
+Nov-01-2025 12:32:02 PM INFO     Celery service initialized successfully celery_service.py:67
+Nov-01-2025 12:32:02 PM INFO     Performance: celery_initialization completed in 3.49ms logging_config.py:216
+Nov-01-2025 12:32:02 PM INFO     Celery service initialized successfully main.py:185
+Nov-01-2025 12:32:02 PM INFO     Service initialization complete main.py:239
+Nov-01-2025 12:32:02 PM WARNING  Failed services detected: Cache main.py:252
+Nov-01-2025 12:33:33 PM INFO     Starting Lumina IQ Backend run.py:90
+Nov-01-2025 12:33:33 PM DEBUG    Third-party logger configuration complete run.py:72
+Nov-01-2025 12:33:33 PM WARNING  Failed to configure frontend environment: 'charmap' codec can't encode character '\U0001f50d' in position 0: character maps to <undefined> run.py:118
+Nov-01-2025 12:33:33 PM INFO     Server configuration run.py:125
+Nov-01-2025 12:33:33 PM INFO     Server starting run.py:171
+Nov-01-2025 12:33:36 PM INFO     Starting Learning App API main.py:45
+Nov-01-2025 12:33:36 PM INFO     Initializing authentication service... main.py:61
+Nov-01-2025 12:33:36 PM INFO     Initializing authentication service auth_service.py:25
+Nov-01-2025 12:33:36 PM INFO     Authentication service initialized successfully auth_service.py:27
+Nov-01-2025 12:33:36 PM INFO     Performance: auth_initialization completed in 3.0ms logging_config.py:216
+Nov-01-2025 12:33:36 PM INFO     Authentication service initialized successfully main.py:68
+Nov-01-2025 12:33:36 PM INFO     Initializing NLTK data... main.py:84
+Nov-01-2025 12:33:36 PM INFO     Initializing NLTK data... nltk_init.py:144
+Nov-01-2025 12:33:36 PM INFO     NLTK data directory: C:\Users\ACER\nltk_data nltk_init.py:40
+Nov-01-2025 12:33:36 PM DEBUG    NLTK resource punkt_tab is available nltk_init.py:174
+Nov-01-2025 12:33:36 PM DEBUG    NLTK resource stopwords is available nltk_init.py:174
+Nov-01-2025 12:33:36 PM WARNING  NLTK resource wordnet cached as downloaded but not found - will re-download nltk_init.py:181
+Nov-01-2025 12:33:36 PM DEBUG    NLTK resource averaged_perceptron_tagger is available nltk_init.py:174
+Nov-01-2025 12:33:36 PM INFO     Downloading missing NLTK resources: ['wordnet'] nltk_init.py:190
+Nov-01-2025 12:33:36 PM INFO     Downloading NLTK resource: wordnet nltk_init.py:102
+Nov-01-2025 12:33:37 PM INFO     Successfully downloaded NLTK resource: wordnet nltk_init.py:104
+Nov-01-2025 12:33:37 PM INFO     NLTK punkt_tab tokenizer is ready nltk_init.py:200
+Nov-01-2025 12:33:37 PM INFO     NLTK data initialization completed nltk_init.py:208
+Nov-01-2025 12:33:37 PM INFO     Performance: nltk_initialization completed in 592.94ms logging_config.py:216
+Nov-01-2025 12:33:37 PM INFO     NLTK data initialized successfully main.py:89
+Nov-01-2025 12:33:37 PM INFO     Initializing cache service... main.py:106
+Nov-01-2025 12:33:37 PM INFO     Initializing Redis cache service cache_service.py:34
+Nov-01-2025 12:33:38 PM ERROR    Failed to initialize Redis cache service: Authentication required cache_service.py:57
+Nov-01-2025 12:33:38 PM WARNING  Redis authentication required. Update REDIS_URL in .env file with password: cache_service.py:64
+Nov-01-2025 12:33:38 PM ERROR    Failed to initialize cache service: Authentication required main.py:116
+Nov-01-2025 12:33:38 PM WARNING  Application will continue without caching - performance may be degraded main.py:125
+Nov-01-2025 12:33:38 PM INFO     Initializing Together AI service... main.py:132
+Nov-01-2025 12:33:38 PM INFO     Initializing Together AI service together_service.py:29
+Nov-01-2025 12:33:38 PM INFO     Together AI service initialized successfully together_service.py:42
+Nov-01-2025 12:33:38 PM INFO     Performance: together_initialization completed in 2.0ms logging_config.py:216
+Nov-01-2025 12:33:38 PM INFO     Together AI service initialized successfully main.py:139
+Nov-01-2025 12:33:38 PM INFO     Initializing RAG orchestrator... main.py:155
+Nov-01-2025 12:33:38 PM INFO     Initializing RAG orchestrator rag_orchestrator.py:32
+Nov-01-2025 12:33:38 PM INFO     Initializing document service document_service.py:28
+Nov-01-2025 12:33:38 PM INFO     Document service initialized successfully document_service.py:35
+Nov-01-2025 12:33:38 PM INFO     Initializing chunking service chunking_service.py:27
+Nov-01-2025 12:33:38 PM INFO     Chunking service initialized successfully chunking_service.py:46
+Nov-01-2025 12:33:38 PM INFO     Initializing embedding service embedding_service.py:30
+Nov-01-2025 12:33:38 PM INFO     Embedding service initialized successfully embedding_service.py:50
+Nov-01-2025 12:33:38 PM INFO     Initializing Qdrant service qdrant_service.py:36
+Nov-01-2025 12:33:39 PM INFO     Collection already exists: lumina_iq_documents_prod qdrant_service.py:80
+Nov-01-2025 12:33:39 PM INFO     Qdrant service initialized successfully qdrant_service.py:83
+Nov-01-2025 12:33:39 PM INFO     Initializing chat service chat_service.py:31
+Nov-01-2025 12:33:39 PM INFO     Chat service initialized successfully chat_service.py:51
+Nov-01-2025 12:33:39 PM INFO     RAG orchestrator initialized successfully rag_orchestrator.py:42
+Nov-01-2025 12:33:39 PM INFO     Performance: rag_initialization completed in 944.23ms logging_config.py:216
+Nov-01-2025 12:33:39 PM INFO     RAG orchestrator initialized successfully main.py:162
+Nov-01-2025 12:33:39 PM INFO     Initializing Celery service... main.py:178
+Nov-01-2025 12:33:39 PM INFO     Initializing Celery service celery_service.py:26
+Nov-01-2025 12:33:39 PM INFO     Celery service initialized successfully celery_service.py:67
+Nov-01-2025 12:33:39 PM INFO     Performance: celery_initialization completed in 4.4ms logging_config.py:216
+Nov-01-2025 12:33:39 PM INFO     Celery service initialized successfully main.py:185
+Nov-01-2025 12:33:39 PM INFO     Service initialization complete main.py:239
+Nov-01-2025 12:33:39 PM WARNING  Failed services detected: Cache main.py:252

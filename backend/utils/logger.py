@@ -1,54 +1,71 @@
 import logging
-import json
-import os
 from datetime import datetime
-from typing import Any, Dict, Optional
 from pathlib import Path
+import sys
 from rich.logging import RichHandler
 from rich.console import Console
-from config.settings import settings
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR))
 
-# COnsoles for RichHandlers
+from config.settings import settings  # noqa: E402
+
+# Prepare Console
 console = Console()
-file_console = Console(
-    file=open(f"{datetime.today().strftime('%d_%b_%Y')}.log", "a+"), width=console.width
-)
 
-# Map string to logging level
+# Map string to logging level (with fallback)
 log_level_map = {
+    "NOTSET": logging.NOTSET,
     "DEBUG": logging.DEBUG,
     "INFO": logging.INFO,
     "WARNING": logging.WARNING,
     "ERROR": logging.ERROR,
     "CRITICAL": logging.CRITICAL,
 }
-log_level = log_level_map.get(settings.LOG_LEVEL.upper(), logging.WARNING)
+log_level = log_level_map.get(
+    getattr(settings, "LOG_LEVEL", "INFO").upper(), logging.INFO
+)
 
-# Global logger instances
-pdf_logger = logging.getLogger("pdf_service")
-cache_logger = logging.getLogger("cache")
-chat_logger = logging.getLogger("chat_service")
-ip_logger = logging.getLogger("ip_detector")
+app_logger = logging.getLogger("lumina_iq")
+app_logger.setLevel(log_level)
+app_logger.propagate = False
+app_logger.handlers.clear()  # Use .clear() for clarity
 
-# Attach Handlers - Console
-for each in (pdf_logger, cache_logger, chat_logger, ip_logger):
-    each.root.handlers = []
-    each.addHandler(RichHandler(console=console))
-    each.addHandler(RichHandler(console=file_console))
-    each.setLevel(log_level)
-    for handler in each.handlers:
-        handler.setLevel(log_level)
+# RichHandler (console, no custom formatter)
+rich_handler = RichHandler(
+    console=console, level=log_level, log_time_format="%b-%d-%Y %I:%M:%S %p"
+)
 
-for each in (pdf_logger, cache_logger, chat_logger, ip_logger):
-    each.info(f"{each.name} Test info")
-    each.debug(f"{each.name} Test debug")
-    each.warning(f"{each.name} Test warning")
-    each.critical(f"{each.name} Test critical")
-    each.error(f"{each.name} Test error")
+# FileHandler (with formatter)
+log_filename = f"{datetime.today().strftime('%d_%b_%Y')}.log"
+file_handler = logging.FileHandler(filename=log_filename, encoding="utf-8", mode="a")
+formatter = logging.Formatter(
+    "%(asctime)s %(levelname)-8s %(message)s %(filename)s:%(lineno)d",
+    datefmt="%b-%d-%Y %I:%M:%S %p",
+)
+file_handler.setFormatter(formatter)
+
+# Attach handlers
+app_logger.addHandler(rich_handler)
+app_logger.addHandler(file_handler)
+
+# Some convenience loggers for different modules
+pdf_logger = app_logger.getChild("pdf_service")
+cache_logger = app_logger.getChild("cache")
+chat_logger = app_logger.getChild("chat_service")
+ip_logger = app_logger.getChild("ip_detector")
 
 
 # Convenience functions
 def get_logger(name: str) -> logging.Logger:
     """Get a logger instance for a specific module"""
-    return logging.getLogger(name)
+    return app_logger.getChild(name)
+
+
+def mutate_logger(name: str, level: int):
+    """Mutate the log level of a specific logger"""
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(rich_handler)
+    logger.addHandler(file_handler)
+    return logger

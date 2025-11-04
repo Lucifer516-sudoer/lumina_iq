@@ -1,29 +1,96 @@
 [project]
-name = "learning"
+name = "lumina_iq"
 version = "0.1.0"
-description = "Add your description here"
+description = "Production-ready RAG backend with advanced AI capabilities"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    # Core FastAPI and Async Services
     "aiofiles==23.2.1",
-    "fastapi==0.104.1",
+    "fastapi==0.115.6",
     "google-generativeai==0.3.2",
-    "orjson==3.9.10",
+    "orjson>=3.9.14",
     "passlib[bcrypt]==1.7.4",
     "pdfplumber==0.10.3",
     "pypdf2==3.0.1",
     "python-dotenv==1.0.0",
     "python-jose[cryptography]==3.3.0",
     "python-multipart==0.0.6",
-    "qdrant-client==1.12.0",
+    "qdrant-client==1.13.3",
     "rich==13.7.0",
     "together==1.2.11",
-    "uvicorn[standard]==0.24.0",
-    "llama-index-core==0.11.0",
-    "llama-index-vector-stores-qdrant==0.3.0",
-    "llama-index-embeddings-together==0.2.0",
-    "llama-index-readers-file==0.2.0",
+    "uvicorn[standard]==0.32.1",
+    # Updated LlamaIndex packages for production stability
+    "llama-index-core==0.12.23",
+    "llama-index-vector-stores-qdrant==0.4.0",
+    "llama-index-embeddings-together==0.3.0",
+    "llama-index-readers-file==0.4.0",
+    "llama-index-llms-together==0.3.0",
+    "llama-index-readers-web==0.3.0",
+    # Configuration and Validation
     "pydantic-settings>=2.11.0",
+    "pluggy>=1.6.0",
+    # Testing and Development
     "pytest>=8.4.2",
+    # Production Server
     "gunicorn[eventlet]>=23.0.0",
+    # LangChain Production Packages
+    "langchain==0.3.14",
+    "langchain-community==0.3.14",
+    "langchain-core==0.3.29",
+    "langchain-text-splitters==0.3.5",
+    "langchain-openai==0.2.14",
+    "langchain-redis==0.2.1",
+    # Async Task Management
+    "celery>=5.4.0",
+    "redis>=5.2.1",
+    # Resilience and Circuit Breaking
+    "circuitbreaker>=2.0.0",
+    # Monitoring and Logging
+    "structlog>=24.4.0",
+    "python-json-logger>=3.2.1",
+    # Security
+    "cryptography>=46.0.3",
+    "psutil>=7.1.2",
 ]
+
+[project.scripts]
+start = "lumina_iq.main:start_server"
+worker = "lumina_iq.tasks.celery_app:worker"
+beat = "lumina_iq.tasks.celery_app:beat"
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.0.0",
+    "isort>=5.12.0",
+    "flake8>=7.0.0",
+    "mypy>=1.8.0",
+]
+monitoring = [
+    "prometheus-client>=0.20.0",
+    "opentelemetry-distro>=0.50b0",
+    "opentelemetry-instrumentation-fastapi>=0.50b0",
+]
+docs = [
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.0",
+]
+
+[dependency-groups]
+dev = [
+    "black>=24.0.0",
+    "isort>=5.12.0",
+    "flake8>=7.0.0",
+    "mypy>=1.8.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["backend*"]
+
+[tool.setuptools.package-dir]
+"lumina_iq" = "backend"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"

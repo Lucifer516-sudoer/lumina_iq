@@ -1,209 +1,285 @@
-import os
-import asyncio
-import concurrent.futures
-from typing import List
-import together
-from utils.logger import chat_logger
-from config.settings import settings
-from utils.cache import cache_service
+"""
+Embedding Service for Lumina IQ RAG Backend.
 
-# Thread pool for concurrent requests
-embedding_pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)  # Reduced for Render free tier
+Handles embedding generation using direct API calls to Together AI.
+"""
+
+from typing import List, Dict, Any, Optional
+import httpx
+from config.settings import settings
+from utils.logger import get_logger
+from .cache_service import cache_service
+
+logger = get_logger("embedding_service")
 
 
 class EmbeddingService:
-    """Service for generating embeddings using Together.ai API with BAAI/bge-large-en-v1.5 model"""
+    """Service for generating embeddings using direct Together AI API calls."""
 
-    @staticmethod
-    def get_api_key() -> str:
-        """Get Together.ai API key from settings"""
-        return settings.TOGETHER_API_KEY
+    def __init__(self):
+        self.api_key: Optional[str] = None
+        self.base_url: str = ""
+        self.model: str = ""
+        self.client: Optional[httpx.AsyncClient] = None
+        self.is_initialized = False
 
-    @staticmethod
-    def get_embedding_model() -> str:
-        """Get embedding model from settings"""
-        return settings.EMBEDDING_MODEL
+    def initialize(self) -> None:
+        """Initialize Together AI embedding service with direct API access."""
+        try:
+            if not settings.TOGETHER_API_KEY:
+                logger.warning("TOGETHER_API_KEY not configured")
+                return
 
-    @staticmethod
-    def get_embedding_dimensions() -> int:
-        """Get embedding dimensions from settings"""
-        return settings.EMBEDDING_DIMENSIONS
+            logger.info(f"Initializing embedding service - model: {settings.EMBEDDING_MODEL}, provider: Together AI (Direct API)")
 
-    @staticmethod
-    def initialize_client() -> together.Together:
-        """Initialize and return Together.ai client"""
-        api_key = EmbeddingService.get_api_key()
+            self.api_key = settings.TOGETHER_API_KEY
+            self.base_url = settings.TOGETHER_BASE_URL.rstrip("/")
+            self.model = settings.EMBEDDING_MODEL
+            
+            # Initialize HTTP client
+            self.client = httpx.AsyncClient(
+                timeout=60.0,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                }
+            )
 
-        chat_logger.debug(
-            f"Initializing client with API key: {'[SET]' if api_key else '[NOT SET]'}"
-        )
-        if not api_key:
-            chat_logger.error("TOGETHER_API_KEY is not set in settings")
-            raise ValueError("TOGETHER_API_KEY environment variable is required")
+            self.is_initialized = True
+            logger.info("Embedding service initialized successfully")
 
-        client = together.Together(api_key=api_key)
-        return client
+        except Exception as e:
+            logger.error(f"Failed to initialize embedding service: {str(e)} - error_type: {type(e).__name__}")
+            self.is_initialized = False
+            raise
+    
+    async def cleanup(self) -> None:
+        """Cleanup resources."""
+        if self.client:
+            await self.client.aclose()
+            self.client = None
+        self.is_initialized = False
+    
+    async def _call_embedding_api(self, texts: List[str]) -> List[List[float]]:
+        """Make direct API call to Together AI embeddings endpoint."""
+        if not self.client:
+            raise RuntimeError("HTTP client not initialized")
+        
+        try:
+            # Together AI embeddings endpoint expects this format
+            payload = {
+                "model": self.model,
+                "input": texts
+            }
+            
+            response = await self.client.post(
+                f"{self.base_url}/embeddings",
+                json=payload
+            )
+            
+            if response.status_code != 200:
+                error_detail = response.text
+                logger.error(f"Embedding API error: {response.status_code} - response: {error_detail}, texts_count: {len(texts)}")
+                raise RuntimeError(f"Error code: {response.status_code} - {error_detail}")
+            
+            data = response.json()
+            
+            # Extract embeddings from response
+            # Together AI returns: {"object": "list", "data": [{"embedding": [...], "index": 0}, ...]}
+            if "data" not in data:
+                raise RuntimeError(f"Unexpected API response format: {data}")
+            
+            # Sort by index to maintain order
+            sorted_data = sorted(data["data"], key=lambda x: x.get("index", 0))
+            embeddings = [item["embedding"] for item in sorted_data]
+            
+            return embeddings
+            
+        except httpx.HTTPError as e:
+            logger.error(f"HTTP error calling embedding API: {str(e)} - error_type: {type(e).__name__}")
+            raise
+        except Exception as e:
+            logger.error(f"Error calling embedding API: {str(e)} - error_type: {type(e).__name__}")
+            raise
 
-    @staticmethod
-    async def generate_embedding(text: str, max_retries: int = 3) -> List[float]:
-        """
-        Generate embedding for a single text using Together.ai API with BAAI/bge-large-en-v1.5
-        Uses caching to avoid repeated API calls
-        """
-        # Check cache first
-        cached_embedding = await cache_service.get_cached_embedding(text)
-        if cached_embedding:
-            return cached_embedding
+    async def generate_embedding(
+        self, text: str, use_cache: bool = True
+    ) -> List[float]:
+        """Generate embedding for text with optional caching."""
+        if not self.is_initialized or not self.client:
+            raise RuntimeError("Embedding service not initialized")
 
-        loop = asyncio.get_event_loop()
-        api_key = EmbeddingService.get_api_key()
-        model = EmbeddingService.get_embedding_model()
+        try:
+            # Sanitize input text
+            if not text or not isinstance(text, str):
+                text = " "
+            else:
+                text = text.strip()
+                if not text:
+                    text = " "
+                # Limit text length to 120k chars (for 32k token model)
+                if len(text) > 120000:
+                    text = text[:120000]
 
-        if not api_key:
-            raise ValueError("Together.ai API key not configured")
-
-        for attempt in range(max_retries):
-
-            def _generate():
-                try:
-                    client = EmbeddingService.initialize_client()
-
-                    # Truncate text if too long (BAAI model handles up to 512 tokens)
-                    # Estimate: ~4 chars per token, so max ~2000 chars
-                    text_truncated = text[:2000] if len(text) > 2000 else text
-
-                    chat_logger.debug(f"Generating embedding with model: {model}")
-
-                    response = client.embeddings.create(
-                        model=model,
-                        input=text_truncated,
-                    )
-                    return response.data[0].embedding, None
-                except Exception as e:
-                    return None, e
-
-            try:
-                embedding, error = await loop.run_in_executor(embedding_pool, _generate)
-
-                if embedding:
-                    # Cache the embedding
-                    await cache_service.save_embedding_to_cache(text, embedding)
-                    return embedding
-
-                if error:
-                    error_str = str(error).lower()
-
-                    # Check if it's a rate limit (temporary)
-                    if any(
-                        keyword in error_str for keyword in ["rate limit", "429", "503"]
-                    ):
-                        if attempt < max_retries - 1:
-                            wait_time = min(2.0**attempt, 5.0)
-                            chat_logger.warning(
-                                f"Rate limit hit, waiting {wait_time}s before retry"
-                            )
-                            await asyncio.sleep(wait_time)
-                            continue
-                        else:
-                            # Max retries reached
-                            raise error
-                    else:
-                        # For other errors, raise immediately
-                        raise error
-
-            except Exception as e:
-                # For non-embedding errors, raise immediately
-                raise
-
-        # If we get here, all retries failed
-        raise Exception(f"Failed to generate embedding after {max_retries} attempts")
-
-    @staticmethod
-    async def generate_embeddings_batch(texts: List[str]) -> List[List[float]]:
-        """Generate embeddings for multiple texts in batch"""
-        tasks = [EmbeddingService.generate_embedding(text) for text in texts]
-        embeddings = await asyncio.gather(*tasks, return_exceptions=True)
-
-        result = []
-        for i, emb in enumerate(embeddings):
-            if isinstance(emb, Exception):
-                chat_logger.error(
-                    f"Failed to generate embedding for text {i}", error=str(emb)
+            # Check cache first if enabled
+            if use_cache and settings.CACHE_EMBEDDINGS:
+                cached_embedding = await cache_service.get_cached_embedding(
+                    text, settings.EMBEDDING_MODEL
                 )
-                raise emb
-            result.append(emb)
+                if cached_embedding:
+                    logger.debug(f"Using cached embedding - text_length: {len(text)}")
+                    return cached_embedding
 
-        return result
+            logger.debug(f"Generating embedding for text - text_length: {len(text)}, model: {settings.EMBEDDING_MODEL}")
 
-    @staticmethod
-    async def generate_batch_query_embeddings(queries: List[str]) -> List[List[float]]:
-        """Generate embeddings for multiple queries in batch"""
-        return await EmbeddingService.generate_embeddings_batch(queries)
+            # Generate embedding using direct API call
+            embeddings = await self._call_embedding_api([text])
+            embedding = embeddings[0]
 
-    @staticmethod
-    async def generate_query_embedding(query: str, max_retries: int = 3) -> List[float]:
-        """
-        Generate embedding for a query text using Together.ai API with BAAI/bge-large-en-v1.5
-        """
-        loop = asyncio.get_event_loop()
-        api_key = EmbeddingService.get_api_key()
-        model = EmbeddingService.get_embedding_model()
+            # Cache the embedding if enabled
+            if use_cache and settings.CACHE_EMBEDDINGS:
+                await cache_service.cache_embedding(
+                    text, embedding, settings.EMBEDDING_MODEL
+                )
 
-        if not api_key:
-            raise ValueError("Together.ai API key not configured")
+            logger.debug(f"Generated embedding successfully - embedding_dim: {len(embedding)}, text_length: {len(text)}")
 
-        for attempt in range(max_retries):
+            return embedding
 
-            def _generate():
-                try:
-                    client = EmbeddingService.initialize_client()
+        except Exception as e:
+            logger.error(f"Failed to generate embedding: {str(e)} - error_type: {type(e).__name__}, text_length: {len(text)}")
+            raise
 
-                    # Truncate query if too long (BAAI model handles up to 512 tokens)
-                    # Estimate: ~4 chars per token, so max ~2000 chars
-                    query_truncated = query[:2000] if len(query) > 2000 else query
+    async def generate_embeddings_batch(
+        self, texts: List[str], use_cache: bool = True
+    ) -> List[List[float]]:
+        """Generate embeddings for multiple texts with batching and caching."""
+        if not self.is_initialized or not self.client:
+            raise RuntimeError("Embedding service not initialized")
 
-                    chat_logger.debug(f"Generating query embedding with model: {model}")
+        try:
+            logger.info(f"Generating embeddings for batch - batch_size: {len(texts)}, model: {settings.EMBEDDING_MODEL}")
 
-                    response = client.embeddings.create(
-                        model=model,
-                        input=query_truncated,
+            embeddings = []
+            texts_to_embed = []
+            cache_indices = []
+
+            # Check cache for each text if enabled
+            if use_cache and settings.CACHE_EMBEDDINGS:
+                for i, text in enumerate(texts):
+                    cached_embedding = await cache_service.get_cached_embedding(
+                        text, settings.EMBEDDING_MODEL
                     )
-                    return response.data[0].embedding, None
-                except Exception as e:
-                    return None, e
-
-            try:
-                embedding, error = await loop.run_in_executor(embedding_pool, _generate)
-
-                if embedding:
-                    return embedding
-
-                if error:
-                    error_str = str(error).lower()
-
-                    # Check if it's a rate limit (temporary)
-                    if any(
-                        keyword in error_str for keyword in ["rate limit", "429", "503"]
-                    ):
-                        if attempt < max_retries - 1:
-                            wait_time = min(2.0**attempt, 5.0)
-                            chat_logger.warning(
-                                f"Rate limit hit, waiting {wait_time}s before retry"
-                            )
-                            await asyncio.sleep(wait_time)
-                            continue
-                        else:
-                            # Max retries reached
-                            raise error
+                    if cached_embedding:
+                        embeddings.append((i, cached_embedding))
                     else:
-                        # For other errors, raise immediately
-                        raise error
+                        texts_to_embed.append(text)
+                        cache_indices.append(i)
 
-            except Exception as e:
-                # For non-embedding errors, raise immediately
-                raise
+                logger.debug(f"Cache stats for batch - cached: {len(embeddings)}, to_generate: {len(texts_to_embed)}")
+            else:
+                texts_to_embed = texts
+                cache_indices = list(range(len(texts)))
 
-        # If we get here, all retries failed
-        raise Exception(
-            f"Failed to generate query embedding after {max_retries} attempts"
-        )
+            # Generate embeddings for uncached texts
+            if texts_to_embed:
+                # Validate and sanitize texts before embedding
+                sanitized_texts = []
+                for text in texts_to_embed:
+                    # Ensure text is not empty and is a string
+                    if not text or not isinstance(text, str):
+                        sanitized_texts.append(" ")  # Use single space for empty/invalid texts
+                    else:
+                        # Trim whitespace and ensure non-empty
+                        sanitized = text.strip()
+                        if not sanitized:
+                            sanitized = " "
+                        # Limit text length to avoid token limits (32k tokens ≈ 128k chars)
+                        # Using 120k chars to be safe and leave room for special tokens
+                        if len(sanitized) > 120000:
+                            sanitized = sanitized[:120000]
+                        sanitized_texts.append(sanitized)
+                
+                # Process in batches to avoid rate limits
+                batch_size = settings.EMBEDDING_BATCH_SIZE
+                new_embeddings = []
+
+                for i in range(0, len(sanitized_texts), batch_size):
+                    batch = sanitized_texts[i : i + batch_size]
+                    batch_embeddings = await self._call_embedding_api(batch)
+                    new_embeddings.extend(batch_embeddings)
+
+                    logger.debug(f"Generated batch embeddings - batch_start: {i}, batch_size: {len(batch)}")
+
+                # Cache new embeddings if enabled
+                if use_cache and settings.CACHE_EMBEDDINGS:
+                    for text, embedding in zip(texts_to_embed, new_embeddings):
+                        await cache_service.cache_embedding(
+                            text, embedding, settings.EMBEDDING_MODEL
+                        )
+
+                # Merge with cached embeddings
+                for idx, embedding in zip(cache_indices, new_embeddings):
+                    embeddings.append((idx, embedding))
+
+            # Sort by original index to maintain order
+            embeddings.sort(key=lambda x: x[0])
+            result_embeddings = [emb for _, emb in embeddings]
+
+            embedding_dim = len(result_embeddings[0]) if result_embeddings else 0
+            logger.info(f"Generated batch embeddings successfully - total_embeddings: {len(result_embeddings)}, embedding_dim: {embedding_dim}")
+
+            return result_embeddings
+
+        except Exception as e:
+            logger.error(f"Failed to generate batch embeddings: {str(e)} - error_type: {type(e).__name__}, batch_size: {len(texts)}")
+            raise
+
+    async def compute_similarity(
+        self, embedding1: List[float], embedding2: List[float]
+    ) -> float:
+        """Compute cosine similarity between two embeddings."""
+        try:
+            import math
+
+            # Compute dot product
+            dot_product = sum(a * b for a, b in zip(embedding1, embedding2))
+
+            # Compute magnitudes
+            magnitude1 = math.sqrt(sum(a * a for a in embedding1))
+            magnitude2 = math.sqrt(sum(b * b for b in embedding2))
+
+            # Compute cosine similarity
+            similarity = dot_product / (magnitude1 * magnitude2)
+
+            return similarity
+
+        except Exception as e:
+            logger.error(f"Failed to compute similarity: {str(e)} - error_type: {type(e).__name__}")
+            raise
+
+    async def find_similar_texts(
+        self, query_embedding: List[float], candidate_embeddings: List[List[float]]
+    ) -> List[Dict[str, Any]]:
+        """Find most similar texts to query embedding."""
+        try:
+            similarities = []
+
+            for i, candidate_embedding in enumerate(candidate_embeddings):
+                similarity = await self.compute_similarity(
+                    query_embedding, candidate_embedding
+                )
+                similarities.append({"index": i, "similarity": similarity})
+
+            # Sort by similarity descending
+            similarities.sort(key=lambda x: x["similarity"], reverse=True)
+
+            return similarities
+
+        except Exception as e:
+            logger.error(f"Failed to find similar texts: {str(e)} - error_type: {type(e).__name__}")
+            raise
+
+
+# Global singleton instance
+embedding_service = EmbeddingService()

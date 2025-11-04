@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { chatApi, PDFSessionInfo } from '@/lib/api';
+import { chatApi, pdfApi, PDFSessionInfo } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -47,8 +47,8 @@ interface Chapter {
 
 export default function QAPage() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [pdfInfo] = useState<PDFSessionInfo | null>(null);
-  const [initialLoading] = useState(true);
+  const [pdfInfo, setPdfInfo] = useState<PDFSessionInfo | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [generatingQuestions, setGeneratingQuestions] = useState(false);
   const [testingAI, setTestingAI] = useState(false);
   const [questionTopic, setQuestionTopic] = useState('');
@@ -57,6 +57,31 @@ export default function QAPage() {
 
   const { logout, user } = useAuth();
   const router = useRouter();
+
+  // Load PDF info on mount
+  React.useEffect(() => {
+    const loadPDFInfo = async () => {
+      console.log('[QA Page] Loading PDF info...');
+      try {
+        const info = await pdfApi.getPDFInfo();
+        console.log('[QA Page] PDF info loaded successfully:', info);
+        setPdfInfo(info);
+        setInitialLoading(false);
+      } catch (error: any) {
+        console.error('[QA Page] Failed to load PDF info:', error);
+        console.error('[QA Page] Error details:', error.response?.data || error.message);
+        setInitialLoading(false);
+        
+        // Show error and redirect after a brief delay
+        console.log('[QA Page] No PDF selected, redirecting in 2 seconds...');
+        setTimeout(() => {
+          router.push('/upload');
+        }, 2000);
+      }
+    };
+
+    loadPDFInfo();
+  }, [router]);
 
 
   const generateChapterQuestions = async (topic?: string) => {
@@ -327,6 +352,27 @@ Please provide a thorough, well-structured answer that helps the user learn from
           </div>
           <h3 className="text-xl font-bold mb-2" style={{ color: '#6B705C' }}>Loading Q&A Session</h3>
           <p style={{ color: '#A5A58D' }}>Preparing your learning environment...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no PDF is selected
+  if (!pdfInfo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FFE8D6' }}>
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="p-4 rounded-2xl w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-lg"
+            style={{ backgroundColor: '#CB997E' }}>
+            <UploadIcon className="h-8 w-8 text-white" />
+          </div>
+          <h3 className="text-xl font-bold mb-2" style={{ color: '#6B705C' }}>No PDF Selected</h3>
+          <p className="mb-6" style={{ color: '#A5A58D' }}>
+            Please upload or select a PDF document to start generating questions.
+          </p>
+          <p className="text-sm mb-6" style={{ color: '#A5A58D' }}>
+            Redirecting to upload page...
+          </p>
         </div>
       </div>
     );
@@ -823,9 +869,19 @@ Please provide a thorough, well-structured answer that helps the user learn from
                                             ),
                                             td: ({ children }) => (
                                               <td className="border px-2 py-1"
-                                                style={{ borderColor: '#B7B7A4', color: '#6B705C' }}>
+                                                style={{ borderColor: '#B7B7A4', color: '#6B705C', backgroundColor: 'transparent' }}>
                                                 {children}
                                               </td>
+                                            ),
+                                            tbody: ({ children }) => (
+                                              <tbody style={{ backgroundColor: 'transparent' }}>
+                                                {children}
+                                              </tbody>
+                                            ),
+                                            tr: ({ children }) => (
+                                              <tr style={{ color: '#6B705C' }}>
+                                                {children}
+                                              </tr>
                                             ),
                                           }}
                                         >
